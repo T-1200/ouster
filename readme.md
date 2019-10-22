@@ -2,6 +2,16 @@
 
 # OS1 ROS Node
 
+## ADJUSTMENTS
+### changes
+* in `src/os1_ros.cpp`
+  * function `convert2XYZIR()` changed intensity resolution to fit velodyne behavior more properly
+  * max intensity is set to 4096 (2¹², instead of 65536 - 2¹⁶)
+  * warning flag is set up to notify if a value \> 4096 is received
+
+### note
+* only run `os1_testbench.launch` with `pointcloud_mode:="XYZIR"` (is default)! other modes don't supply re-scaling intensity resolution.
+
 ## Building the ROS Node
 * Supports Ubuntu 16.04 with ROS Kinetic (for ouster_driver)
 * ROS installation instructions can be found [here](http://wiki.ros.org/kinetic/Installation/Ubuntu)
