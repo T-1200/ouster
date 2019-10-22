@@ -11,6 +11,14 @@ using namespace ouster::OS1;
 
 static std::string _pointcloud_mode = "NATIVE";
 
+/*
+ * // intensity inspection
+uint16_t max_int = 0;
+uint16_t* int_ptr = &max_int;		// setting up pointer
+uint16_t new_int = 0;
+uint16_t* new_int_ptr = &new_int; // setting up pointer
+*/
+
 ns timestamp_of_imu_packet(const PacketMsg& pm) {
     return ns(imu_gyro_ts(pm.buf.data()));
 }
@@ -165,8 +173,9 @@ void spin(const client& cli,
         }
         if (state & LIDAR_DATA) {
             if (read_lidar_packet(cli, lidar_packet.buf.data()))
-                lidar_handler(lidar_packet);
-        }
+				lidar_handler(lidar_packet);
+		}
+
         if (state & IMU_DATA) {
             if (read_imu_packet(cli, imu_packet.buf.data()))
                 imu_handler(imu_packet);
@@ -245,10 +254,25 @@ void convert2XYZIR(const CloudOS1& in, CloudOS1XYZIR& out)
        q.x = p.x;
        q.y = p.y;
        q.z = p.z;
-       q.intensity = ((float)p.intensity/65535.0)*255.0; //velodyne uses values in [0..255] range
+	   // if (p.intensity > *new_int_ptr) {*new_int_ptr = p.intensity;}	// intensity inspection
+       // q.intensity = ((float)p.intensity/65535.0)*255.0; //velodyne uses values in [0..255] range
+	   if (p.intensity > 4096) {	// set limit and warn about exceeding
+			auto exc_intens = p.intensity;
+			ROS_WARN("ouster_driver: intensity threshold exceeded: %i", exc_intens);
+			p.intensity = 4096;
+	   }
+       q.intensity = ((float)p.intensity/4096.0)*255.0;
        q.ring = pixels_per_column - p.ring; //reverse the ring order to match Velodyne's (except NATIVE mode which respects Ouster original ring order)
        out.points.push_back(q);
    }
+   /*
+	// intensity value inspection
+	if (*new_int_ptr > *int_ptr) {
+		*int_ptr = *new_int_ptr;
+    	printf("%u\n", *int_ptr);
+	}
+	*new_int_ptr = 0;	// resetting new_int pointer value
+	*/
 }
 
 /**
