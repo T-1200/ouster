@@ -30,6 +30,8 @@ using CloudOS1XYZIFN = pcl::PointCloud<PointXYZIFN>;
 using CloudOS1XYZIRFN = pcl::PointCloud<PointXYZIRFN>;
 using ns = std::chrono::nanoseconds;
 
+void print_retro_threshold();
+
 /**
  * Read an imu packet into a ROS message. Blocks for up to a second if no data
  * is available.
